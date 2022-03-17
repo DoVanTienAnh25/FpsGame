@@ -8,9 +8,12 @@ public class DoorOpen : MonoBehaviour
     public AudioSource doorFX;
     void OnTriggerEnter(Collider other)
     {
-        doorFX.Play();
-        theDoor.GetComponent<Animator>().Play("DoorOpen");
-        StartCoroutine(closedoor());
+        if(other.tag == "Player")
+        {
+            doorFX.Play();
+            theDoor.GetComponent<Animator>().Play("DoorOpen");
+            StartCoroutine(closedoor());
+        }
     }
 
     IEnumerator closedoor()

@@ -50,9 +50,6 @@ namespace Unity.FPS.Gameplay
         [Range(0.1f, 1f)] [Tooltip("Rotation speed multiplier when aiming")]
         public float AimingRotationMultiplier = 0.4f;
 
-        [Header("Jump")] [Tooltip("Force applied upward when jumping")]
-        public float JumpForce = 9f;
-
         [Header("Stance")] [Tooltip("Ratio (0-1) of the character height where the camera will be at")]
         public float CameraHeightRatio = 0.9f;
 
@@ -73,28 +70,6 @@ namespace Unity.FPS.Gameplay
 
         [Tooltip("Sound played for footsteps")]
         public AudioClip FootstepSfx;
-
-        [Tooltip("Sound played when jumping")] public AudioClip JumpSfx;
-        [Tooltip("Sound played when landing")] public AudioClip LandSfx;
-
-        [Tooltip("Sound played when taking damage froma fall")]
-        public AudioClip FallDamageSfx;
-
-        [Header("Fall Damage")]
-        [Tooltip("Whether the player will recieve damage when hitting the ground at high speed")]
-        public bool RecievesFallDamage;
-
-        [Tooltip("Minimun fall speed for recieving fall damage")]
-        public float MinSpeedForFallDamage = 10f;
-
-        [Tooltip("Fall speed for recieving th emaximum amount of fall damage")]
-        public float MaxSpeedForFallDamage = 30f;
-
-        [Tooltip("Damage recieved when falling at the mimimum speed")]
-        public float FallDamageAtMinSpeed = 10f;
-
-        [Tooltip("Damage recieved when falling at the maximum speed")]
-        public float FallDamageAtMaxSpeed = 50f;
 
         public UnityAction<bool> OnStanceChanged;
 
@@ -183,27 +158,7 @@ namespace Unity.FPS.Gameplay
             bool wasGrounded = IsGrounded;
             GroundCheck();
 
-            // landing
-            if (IsGrounded && !wasGrounded)
-            {
-                // Fall damage
-                float fallSpeed = -Mathf.Min(CharacterVelocity.y, m_LatestImpactSpeed.y);
-                float fallSpeedRatio = (fallSpeed - MinSpeedForFallDamage) /
-                                       (MaxSpeedForFallDamage - MinSpeedForFallDamage);
-                if (RecievesFallDamage && fallSpeedRatio > 0f)
-                {
-                    float dmgFromFall = Mathf.Lerp(FallDamageAtMinSpeed, FallDamageAtMaxSpeed, fallSpeedRatio);
-                    m_Health.TakeDamage(dmgFromFall, null);
-
-                    // fall damage SFX
-                    AudioSource.PlayOneShot(FallDamageSfx);
-                }
-                else
-                {
-                    // land SFX
-                    AudioSource.PlayOneShot(LandSfx);
-                }
-            }
+            
 
             // crouching
             if (m_InputHandler.GetCrouchInputDown())
@@ -313,31 +268,6 @@ namespace Unity.FPS.Gameplay
                     // smoothly interpolate between our current velocity and the target velocity based on acceleration speed
                     CharacterVelocity = Vector3.Lerp(CharacterVelocity, targetVelocity,
                         MovementSharpnessOnGround * Time.deltaTime);
-
-                    // jumping
-                    if (IsGrounded && m_InputHandler.GetJumpInputDown())
-                    {
-                        // force the crouch state to false
-                        if (SetCrouchingState(false, false))
-                        {
-                            // start by canceling out the vertical component of our velocity
-                            CharacterVelocity = new Vector3(CharacterVelocity.x, 0f, CharacterVelocity.z);
-
-                            // then, add the jumpSpeed value upwards
-                            CharacterVelocity += Vector3.up * JumpForce;
-
-                            // play sound
-                            AudioSource.PlayOneShot(JumpSfx);
-
-                            // remember last time we jumped because we need to prevent snapping to ground for a short time
-                            m_LastTimeJumped = Time.time;
-                            HasJumpedThisFrame = true;
-
-                            // Force grounding to false
-                            IsGrounded = false;
-                            m_GroundNormal = Vector3.up;
-                        }
-                    }
 
                     // footsteps sound
                     float chosenFootstepSfxFrequency =
