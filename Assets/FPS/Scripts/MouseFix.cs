@@ -7,12 +7,12 @@ public class MouseFix : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Cursor.visible = true;
+        UnlockMouse();
     }
 
-    // Update is called once per frame
-    void Update()
+    void UnlockMouse()
     {
+        Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 }
